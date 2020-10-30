@@ -83,6 +83,11 @@ int print_table(int open_id, Line_entry *table, unsigned int table_size) {
         print_line(open_id, table[line]);
         putchar('\n');
     }
+    close(open_id);
+    if (close(open_id) == -1) {
+        fprintf(stderr, "Close error\n");
+        return EXIT_FAILURE;
+    }
     return EXIT_SUCCESS;
 }
 
