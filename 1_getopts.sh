@@ -6,9 +6,9 @@ if [ -z "$*" ];  then
 fi
 
 print_id() {
-	echo -n "uid="; id -ru
-        echo -n "euid="; id -u
-        echo -n "gid="; id -G
+	echo -n "uid=  "; id -ru
+        echo -n "euid= "; id -u
+        echo -n "gid=  "; id -G
         echo -n "geuid="; id -g
 }
 
@@ -31,6 +31,11 @@ change_core() {
 }
 
 change_env() {
+	read name value
+	echo $name 
+	echo $value
+	eval "$name=value"
+	echo $$name
 }
 
 while getopts ":ispuU:cC:dvV:" opt
