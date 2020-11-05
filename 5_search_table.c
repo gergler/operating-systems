@@ -5,34 +5,40 @@
 #include <zconf.h>
 #include <stdlib.h>
 
-#define MAX_SIZE 200
-#define MAX_LINES 100
+#define MAX_BUFF 200
+#define MAX_LINES 50
 
-char buffer[MAX_SIZE];
+char buffer[MAX_BUFF];
 
 typedef struct Line_entry {
     off_t offset;
     unsigned int length;
 } Line_entry;
 
-int build_table(int open_id, Line_entry *table, unsigned int max_size) {
+int build_table(int fd, Line_entry *table, unsigned int max_size) {
     int current_line = 1;
     int current_position = 0;
     table[1].offset = 0L;
     while (true) {
-        int read_amount = read(open_id, buffer, MAX_SIZE);
-        if (read_amount == 0)
+        int read_amount = read(fd, buffer, MAX_BUFF);
+        if (read_amount == 0) {
+            fprintf(stderr, "End of file\n");
             break;
+        }
         if (read_amount == -1) {
-            perror("Error at building_table() read(): ");
-            exit(EXIT_FAILURE);
+            if (errno == EINTR || errno == EAGAIN) //EINTR - Interrupted function call //EAGAIN - The resource is temporarily unavailable
+                continue;
+            else {
+                fprintf(stderr, "Error at building_table() in READ():");
+                exit(EXIT_FAILURE);
+            }
         }
         for (unsigned int i = 0; i < read_amount; i++) {
             current_position++;
             if (buffer[i] == '\n') {
                 table[current_line].length = current_position - 1;
                 if (current_line == max_size) {
-                    printf("Long file, wait while read %d lines\n", max_size);
+                    fprintf(stderr, "Long file, wait while read %d lines\n");
                     return current_line - 1;
                 }
                 table[current_line + 1].offset = table[current_line].offset + current_position;
@@ -45,48 +51,44 @@ int build_table(int open_id, Line_entry *table, unsigned int max_size) {
     return current_line;
 }
 
-void print_line(int open_id, Line_entry line_entry) {
-    lseek(open_id, line_entry.offset, SEEK_SET);
+void print_line(int fd, Line_entry line_entry) {
+    lseek(fd, line_entry.offset, SEEK_SET);
     unsigned int bytes_read;
-    for (unsigned int i = 0; i < line_entry.length; i += MAX_SIZE) {
-        if (MAX_SIZE > line_entry.length - i)
+    for (unsigned int i = 0; i < line_entry.length; i += MAX_BUFF) {
+        if (MAX_BUFF > line_entry.length - i)
             bytes_read = line_entry.length - i;
         else
-            bytes_read = MAX_SIZE;
-        if (read(open_id, buffer, bytes_read) == -1) {
-            perror("Error at print_line() read(): ");
+            bytes_read = MAX_BUFF;
+        if (read(fd, buffer, bytes_read) == -1) {
+            fprintf(stderr, "Error at print_line() READ(): ");
             exit(EXIT_FAILURE);
         }
         if (write(STDOUT_FILENO, buffer, bytes_read) == -1) {
-            perror("Error at print_line() write(): ");
+            fprintf(stderr, "Error at print_line() WRITE(): ");
             exit(EXIT_FAILURE);
         }
     }
 }
 
-int print_table(int open_id, Line_entry *table, unsigned int table_size) {
+int print_table(int fd, Line_entry *table, unsigned int table_size) {
+    printf("Lines amount: [%d,%d]\n", 1, table_size - 1);
+    int scan_line = 1;
     while (true) {
-        int line, result;
-        char end;
-        printf("$ ");
-        result = scanf("%d%c", &line, &end);
-        if (result != 2 || end != '\n') {
-            fprintf(stderr, "Format error\n");
-            return EXIT_FAILURE;
-        }
-        if (line == '\0')
-            break;
-        if (line < 0 || line > table_size) {
-            fprintf(stderr, "Out of range error\n");
+        printf("print line number: ");
+        scanf("%d", &scan_line);
+        if (scan_line < 0 || scan_line > table_size) {
+            fprintf(stderr, "This line doesn't exist, try again\n");
             continue;
         }
-        print_line(open_id, table[line]);
+        if (scan_line == 0) {
+            close(fd);
+            if (close(fd) == -1) {
+                fprintf(stderr, "Close error\n");
+                return EXIT_FAILURE;
+            }
+        }
+        print_line(fd, table[scan_line]);
         putchar('\n');
-    }
-    close(open_id);
-    if (close(open_id) == -1) {
-        fprintf(stderr, "Close error\n");
-        return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
 }
@@ -96,14 +98,14 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "%s \n", argv[0]);
         return EINVAL;
     }
-    int open_id = open(argv[1], O_RDONLY);
-    if (open_id == -1) {
-        perror(argv[0]);
+    int fd = open(argv[1], O_RDONLY);
+    if (fd == -1) {
+        fprintf(stderr, "File doesn't open");
         return EIO;
     }
     Line_entry *table = malloc(sizeof(Line_entry) * (MAX_LINES + 1));
-    int table_size = build_table(open_id, table, MAX_LINES);
-    int out = print_table(open_id, table, table_size);
+    int table_building = build_table(fd, table, MAX_LINES);
+    int out = print_table(fd, table, table_building);
     free(table);
     return out;
 }
