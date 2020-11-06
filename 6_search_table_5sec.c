@@ -17,8 +17,8 @@ typedef struct Line_entry {
 } Line_entry;
 
 int build_table(int fd, Line_entry *table, unsigned int max_size) {
-    int current_line = 1;
-    int current_position = 0;
+    int line = 1;
+    int position = 0;
     table[1].offset = 0L;
     while (true) {
         int read_amount = read(fd, buffer, MAX_BUFF);
@@ -32,25 +32,25 @@ int build_table(int fd, Line_entry *table, unsigned int max_size) {
                 continue;
             else {
                 fprintf(stderr, "Error at building_table() in READ():");
-                exit(EXIT_FAILURE);
+                exit(-1);
             }
         }
         for (unsigned int i = 0; i < read_amount; i++) {
-            current_position++;
+            position++;
             if (buffer[i] == '\n') {
-                table[current_line].length = current_position - 1;
-                if (current_line == max_size) {
-                    fprintf(stderr, "Long file, wait while read %d lines\n");
-                    return current_line - 1;
+                table[line].length = position - 1;
+                if (line == max_size) {
+                    fprintf(stderr, "Long file, wait while read %d lines\n", line);
+                    return line - 1;
                 }
-                table[current_line + 1].offset = table[current_line].offset + current_position;
-                current_line++;
-                current_position = 0;
+                table[line + 1].offset = table[line].offset + position;
+                line++;
+                position = 0;
             }
         }
     }
-    table[current_line].length = current_position;
-    return current_line;
+    table[line].length = position;
+    return line;
 }
 
 void print_line(int fd, Line_entry line_entry) {
@@ -63,11 +63,11 @@ void print_line(int fd, Line_entry line_entry) {
             bytes_read = MAX_BUFF;
         if (read(fd, buffer, bytes_read) == -1) {
             fprintf(stderr, "Error at print_line() READ(): ");
-            exit(EXIT_FAILURE);
+            break;
         }
         if (write(STDOUT_FILENO, buffer, bytes_read) == -1) {
             fprintf(stderr, "Error at print_line() WRITE(): ");
-            exit(EXIT_FAILURE);
+            break;
         }
     }
 }
@@ -75,14 +75,15 @@ void print_line(int fd, Line_entry line_entry) {
 int print_table(int fd, Line_entry *table, unsigned int table_size) {
     printf("Lines amount: [%d,%d]. Print number of line within 5 seconds\n", 1, table_size - 1);
     int scan_line = 1;
+    int max_fd = 0;
     fd_set rfds;
-    struct timeval timer;
-    int retval;
-    FD_SET(fd, &rfds);
-    timer.tv_sec = 5;
-    timer.tv_usec = 0;
-    select(2, &rfds, NULL, NULL, &timer);
-    if (FD_ISSET(STDIN_FILENO, &rfds)) {
+    struct timeval timeout;
+    FD_ZERO(&rfds);
+    FD_SET(0, &rfds);
+    timeout.tv_sec = 5;
+    timeout.tv_usec = 0;
+    int fd_amount = select(max_fd + 1, &rfds, NULL, NULL, &timeout);
+    if (fd_amount > 0) {
         while (true) {
             printf("print line number: ");
             scanf("%d", &scan_line);
@@ -95,20 +96,24 @@ int print_table(int fd, Line_entry *table, unsigned int table_size) {
             print_line(fd, table[scan_line]);
             putchar('\n');
         }
-    } else {
+    }
+    if (fd_amount == -1) {
+        fprintf(stderr, "Error at select()\n");
+        return -1;
+    }
+    if (fd_amount == 0) {
         printf("Time is up! Keep the whole file:\n");
         for (unsigned int i = 1; i < table_size; i++) {
             print_line(fd, table[i]);
             putchar('\n');
         }
-        exit(EXIT_SUCCESS);
     }
     close(fd);
     if (close(fd) == -1) {
         fprintf(stderr, "Close error\n");
-        return EXIT_FAILURE;
+        return -1;
     }
-    return EXIT_SUCCESS;
+    return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -122,6 +127,10 @@ int main(int argc, char *argv[]) {
         return EIO;
     }
     Line_entry *table = malloc(sizeof(Line_entry) * (MAX_LINES + 1));
+    if (table == NULL) {
+        fprintf(stderr, "Failled to allocate memory\n");
+        return -1;
+    }
     int table_building = build_table(fd, table, MAX_LINES);
     int out = print_table(fd, table, table_building);
     free(table);
