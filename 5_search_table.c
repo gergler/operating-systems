@@ -30,7 +30,7 @@ int build_table(int fd, Line_entry *table, unsigned int max_size) {
                 continue;
             else {
                 fprintf(stderr, "Error at building_table() in READ():");
-                exit(EXIT_FAILURE);
+                exit(-1);
             }
         }
         for (unsigned int i = 0; i < read_amount; i++) {
@@ -61,11 +61,11 @@ void print_line(int fd, Line_entry line_entry) {
             bytes_read = MAX_BUFF;
         if (read(fd, buffer, bytes_read) == -1) {
             fprintf(stderr, "Error at print_line() READ(): ");
-            exit(EXIT_FAILURE);
+            exit(-1);
         }
         if (write(STDOUT_FILENO, buffer, bytes_read) == -1) {
             fprintf(stderr, "Error at print_line() WRITE(): ");
-            exit(EXIT_FAILURE);
+            exit(-1);
         }
     }
 }
@@ -84,13 +84,13 @@ int print_table(int fd, Line_entry *table, unsigned int table_size) {
             close(fd);
             if (close(fd) == -1) {
                 fprintf(stderr, "Close error\n");
-                return EXIT_FAILURE;
+                return -1;
             }
         }
         print_line(fd, table[scan_line]);
         putchar('\n');
     }
-    return EXIT_SUCCESS;
+    return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -104,6 +104,10 @@ int main(int argc, char *argv[]) {
         return EIO;
     }
     Line_entry *table = malloc(sizeof(Line_entry) * (MAX_LINES + 1));
+    if (table == NULL) {
+        fprintf(stderr, "Failled to allocate memory\n");
+        return -1;
+    }
     int table_building = build_table(fd, table, MAX_LINES);
     int out = print_table(fd, table, table_building);
     free(table);
