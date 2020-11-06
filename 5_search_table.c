@@ -109,6 +109,11 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     int table_building = build_table(fd, table, MAX_LINES);
+    if (table_building == -1) {
+        fprintf(stderr, "Error at table_building");
+        free(table);
+        return -1;
+    }
     int out = print_table(fd, table, table_building);
     free(table);
     return out;
