@@ -22,10 +22,6 @@ int build_table(int fd, Line_entry *table, unsigned int max_size) {
     table[1].offset = 0L;
     while (true) {
         int read_amount = read(fd, buffer, MAX_BUFF);
-        if (read_amount == 0) {
-            fprintf(stderr, "End of file\n");
-            break;
-        }
         if (read_amount == -1) {
             if (errno == EINTR ||
                 errno == EAGAIN) //EINTR - Interrupted function call //EAGAIN - The resource is temporarily unavailable
@@ -34,6 +30,10 @@ int build_table(int fd, Line_entry *table, unsigned int max_size) {
                 fprintf(stderr, "Error at building_table() in READ():");
                 exit(-1);
             }
+        }
+        if (read_amount == 0) {
+            fprintf(stderr, "End of file\n");
+            break;
         }
         for (unsigned int i = 0; i < read_amount; i++) {
             position++;
@@ -73,8 +73,8 @@ void print_line(int fd, Line_entry line_entry) {
 }
 
 int print_table(int fd, Line_entry *table, unsigned int table_size) {
-    printf("Lines amount: [%d,%d]. Print number of line within 5 seconds\n", 1, table_size - 1);
-    int scan_line = 1;
+    printf("\nLines amount: [%d,%d]. Print number of line within 5 seconds \n", 1, table_size - 1);
+    int scan_line;
     int max_fd = 0;
     fd_set rfds;
     struct timeval timeout;
@@ -83,35 +83,39 @@ int print_table(int fd, Line_entry *table, unsigned int table_size) {
     timeout.tv_sec = 5;
     timeout.tv_usec = 0;
     int fd_amount = select(max_fd + 1, &rfds, NULL, NULL, &timeout);
-    if (fd_amount > 0) {
-        while (true) {
-            printf("print line number: ");
-            scanf("%d", &scan_line);
-            if (scan_line < 0 || scan_line > table_size) {
-                fprintf(stderr, "This line doesn't exist, try again\n");
-                continue;
+    if (FD_ISSET(fd, &rfds) != 0) {
+        if (fd_amount > 0) {
+            while (true) {
+                printf("print line number: ");
+                scanf("%d", &scan_line);
+                if (scan_line < 0 || scan_line > table_size - 1) {
+                    fprintf(stderr, "This line doesn't exist, try again\n");
+                    continue;
+                }
+                if (scan_line == 0)
+                    break;
+                print_line(fd, table[scan_line]);
+                putchar('\n');
             }
-            if (scan_line == 0)
-                break;
-            print_line(fd, table[scan_line]);
-            putchar('\n');
         }
-    }
-    if (fd_amount == -1) {
-        fprintf(stderr, "Error at select()\n");
-        return -1;
-    }
-    if (fd_amount == 0) {
-        printf("Time is up! Keep the whole file:\n");
-        for (unsigned int i = 1; i < table_size; i++) {
-            print_line(fd, table[i]);
-            putchar('\n');
+        if (fd_amount == -1) {
+            fprintf(stderr, "Error at select()\n");
+            return -1;
         }
-    }
-    close(fd);
-    if (close(fd) == -1) {
-        fprintf(stderr, "Close error\n");
-        return -1;
+        if (fd_amount == 0) {
+            printf("Time is up! Keep the whole file:\n");
+            for (unsigned int i = 1; i < table_size; i++) {
+                print_line(fd, table[i]);
+                putchar('\n');
+            }
+        }
+        close(fd);
+        if (close(fd) == -1) {
+            fprintf(stderr, "Close error\n");
+            return -1;
+        }
+    } else {
+        printf("fd absent in fd_set");
     }
     return 0;
 }
