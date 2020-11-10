@@ -83,8 +83,8 @@ int print_table(int fd, Line_entry *table, unsigned int table_size) {
     timeout.tv_sec = 5;
     timeout.tv_usec = 0;
     int fd_amount = select(max_fd + 1, &rfds, NULL, NULL, &timeout);
-    if (FD_ISSET(fd, &rfds) != 0) {
-        if (fd_amount > 0) {
+     if (fd_amount > 0) {
+        if (FD_ISSET(fd, &rfds) != 0) {
             while (true) {
                 printf("print line number: ");
                 scanf("%d", &scan_line);
@@ -97,25 +97,25 @@ int print_table(int fd, Line_entry *table, unsigned int table_size) {
                 print_line(fd, table[scan_line]);
                 putchar('\n');
             }
+        } else {
+            printf("fd absent in fd_set");
         }
-        if (fd_amount == -1) {
-            fprintf(stderr, "Error at select()\n");
-            return -1;
+    }
+    if (fd_amount == -1) {
+        fprintf(stderr, "Error at select()\n");
+        return -1;
+    }
+    if (fd_amount == 0) {
+        printf("Time is up! Keep the whole file:\n");
+        for (unsigned int i = 1; i < table_size; i++) {
+            print_line(fd, table[i]);
+            putchar('\n');
         }
-        if (fd_amount == 0) {
-            printf("Time is up! Keep the whole file:\n");
-            for (unsigned int i = 1; i < table_size; i++) {
-                print_line(fd, table[i]);
-                putchar('\n');
-            }
-        }
-        close(fd);
-        if (close(fd) == -1) {
-            fprintf(stderr, "Close error\n");
-            return -1;
-        }
-    } else {
-        printf("fd absent in fd_set");
+    }
+    close(fd);
+    if (close(fd) == -1) {
+        fprintf(stderr, "Close error\n");
+        return -1;
     }
     return 0;
 }
