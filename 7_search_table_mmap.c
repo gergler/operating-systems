@@ -68,7 +68,7 @@ int print_table(int fd, Line_entry *table, char *map, unsigned int table_size) {
                 }
                 if (scan_line == 0)
                     break;
-                print_line(fd, table[scan_line]);
+                print_line(table[scan_line], map);
                 putchar('\n');
             }
         } else {
@@ -82,7 +82,7 @@ int print_table(int fd, Line_entry *table, char *map, unsigned int table_size) {
     if (fd_amount == 0) {
         printf("Time is up! Keep the whole file:\n");
         for (unsigned int i = 1; i < table_size; i++) {
-            print_line(fd, table[i]);
+            print_line(table[i], map);
             putchar('\n');
         }
     }
