@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     waitpid(pid, &status, 0);
     if (WIFEXITED(status)) {
         printf("Everything is okay\n");
-        return 1;
+        return 0;
     } else {
         fprintf(stderr, "Error at terminating child process\n");
         return -1;
