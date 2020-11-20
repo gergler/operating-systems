@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     if (pid == 0) {
-        execl("/bin/cat", "cat", argv[1], NULL);
+        execv("/bin/cat", argv[1]);
         _exit(-1);
     }
     waitpid(pid, &status, 0);
