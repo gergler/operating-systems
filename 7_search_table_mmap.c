@@ -88,7 +88,7 @@ int print_table(int fd, Line_entry *table, char *map, unsigned int table_size) {
     }
     close(fd);
     if (close(fd) == -1) {
-        fprintf(stderr, "Close error\n");
+        fprintf(stderr, "Error at close in print_table()\n");
         return -1;
     }
     return 0;
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
     if (map == MAP_FAILED) {
         close(fd);
         if (close(fd) == -1) {
-            fprintf(stderr, "Error at close");
+            fprintf(stderr, "Error at close in mmap");
             return -1;
         }
         fprintf(stderr, "Error mmapping the file");
