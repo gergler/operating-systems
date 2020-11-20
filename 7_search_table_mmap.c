@@ -95,8 +95,8 @@ int print_table(int fd, Line_entry *table, char *map, unsigned int table_size) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        fprintf(stderr, "%s \n", argv[0]);
+    if (argc < 2) {
+        fprintf(stderr, "No file %s \n", argv[0]);
         return EINVAL;
     }
     int fd = open(argv[1], O_RDONLY);
@@ -120,15 +120,6 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     char *map = mmap(0, file_info.st_size, PROT_READ, MAP_SHARED, fd, 0L);
-
-    int table_building = build_table(fd, table, map, file_info.st_size);
-    if (table_building == -1) {
-        fprintf(stderr, "Error at table_building");
-        free(table);
-        return -1;
-    }
-    int out = print_table(fd, table, map, table_building);
-    free(table);
     if (map == MAP_FAILED) {
         close(fd);
         if (close(fd) == -1) {
@@ -138,5 +129,18 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Error mmapping the file");
         return -1;
     }
-    return out;
+    int table_building = build_table(fd, table, map, file_info.st_size);
+    if (table_building == -1) {
+        fprintf(stderr, "Error at table_building");
+        free(table);
+        return -1;
+    }
+    int out = print_table(fd, table, map, table_building);
+    if (munmap(0, file_info.st_size) == 0) {
+        free(table);
+        return out;
+    } else {
+        fprintf(stderr, "Error at munmap");
+        return -1;
+    }
 }
