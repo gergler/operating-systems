@@ -14,14 +14,15 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     if (pid == 0)
-        execl("/bin/cat", "cat", argv[1], NULL);
+        execvp(argv[1], &argv[1]);
     waitpid(pid, &status, 0);
+    if (WIFSIGNALED(status)) {
+        printf("Child ended due to signal: %d\tchild pid: %d\n", WTERMSIG(status), pid);
+        return 0;
+    }
     if (WIFEXITED(status)) {
         printf("Child process ended, child pid: %d\tdescendant exit code: %d\n", pid, WEXITSTATUS(status));
         return 0;
     }
-    if (WIFSIGNALED(status)) {
-        printf("Child ended due to signal: %d\n", WTERMSIG(status));
-        return 0;
-    }
+    return 0;
 }
