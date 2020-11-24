@@ -2,11 +2,10 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-
 int main(int argc, char *argv[]) {
     int status;
     if (argc < 2) {
-        fprintf(stderr, "No argc\n");
+        fprintf(stderr, "Usage:\n%s executable_arguments\n", argv[0]);
         return -1;
     }
     pid_t pid = fork();
@@ -14,16 +13,15 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Error at fork()");
         return -1;
     }
-    if (pid == 0) {
-        execvp(argv[1], &argv[1]);
-        _exit(-1);
-    }
+    if (pid == 0)
+        execl("/bin/cat", "cat", argv[1], NULL);
     waitpid(pid, &status, 0);
     if (WIFEXITED(status)) {
-        printf("Child process end, child pid: %d\tdescendant exit code: %d\n", pid, WEXITSTATUS(status));
+        printf("Child process ended, child pid: %d\tdescendant exit code: %d\n", pid, WEXITSTATUS(status));
         return 0;
-    } else {
-        fprintf(stderr, "Error at terminating child process\n");
-        return -1;
+    }
+    if (WIFSIGNALED(status)) {
+        printf("Child ended due to signal: %d\n", WTERMSIG(status));
+        return 0;
     }
 }
