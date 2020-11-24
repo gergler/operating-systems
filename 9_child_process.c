@@ -5,8 +5,8 @@
 
 int main(int argc, char *argv[]) {
     int status;
-    if (argc != 2) {
-        fprintf(stderr, "No file\n");
+    if (argc < 2) {
+        fprintf(stderr, "Usage:\n%s file_name\n", argv[0]);
         return EINVAL;
     }
     pid_t pid = fork();
@@ -14,16 +14,15 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Error at fork()");
         return -1;
     }
-    if (pid == 0) {
-        execv("/bin/cat", argv[1]);
-        _exit(-1);
-    }
+    if (pid == 0)
+        execl("/bin/cat", "cat", argv[1], NULL);
     waitpid(pid, &status, 0);
     if (WIFEXITED(status)) {
-        printf("Child process end\n");
+        printf("Child ended okay\n, ");
         return 0;
-    } else {
-        fprintf(stderr, "Error at terminating child process\n");
-        return -1;
+    }
+    if (WIFSIGNALED(status)) {
+        printf("Child ended due to signal\n");
+        return 0;
     }
 }
