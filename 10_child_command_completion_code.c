@@ -16,13 +16,9 @@ int main(int argc, char *argv[]) {
     if (pid == 0)
         execvp(argv[1], &argv[1]);
     waitpid(pid, &status, 0);
-    if (WIFSIGNALED(status)) {
+    if (WIFSIGNALED(status))
         printf("Child ended due to signal: %d\tchild pid: %d\n", WTERMSIG(status), pid);
-        return 0;
-    }
-    if (WIFEXITED(status)) {
-        printf("Child process ended, child pid: %d\tdescendant exit code: %d\n", pid, WEXITSTATUS(status));
-        return 0;
-    }
+    if (WIFEXITED(status))
+        printf("Child process ended with exit code: %d\tchild pid: %d\n", WEXITSTATUS(status), pid);
     return 0;
 }
