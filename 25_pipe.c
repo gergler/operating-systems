@@ -31,13 +31,15 @@ int main(int argc, char *argv[]) {
     if (pid1 == 0) {
         if (close(pipefd[0]) == -1)
             fprintf(stderr, "Error at close pipefd[0] 1\n");
-        strcpy(buf, argv[1]);
-        if (write(pipefd[1], buf, strlen(argv[1])) != strlen(argv[1])) {
+        if (write(pipefd[1], argv[1], strlen(argv[1])) != strlen(argv[1])) {
             fprintf(stderr, "Can't write all write\n");
             if (close(pipefd[1]) == -1)
                 fprintf(stderr, "Error at close pipefd[1] 1\n");
             return -1;
         }
+        if (close(pipefd[1]) == -1)
+            fprintf(stderr, "Error at close pipefd[1] 1\n");
+        return -1;
     } else {
         pid_t pid2 = fork();
         if (pid2 == -1) {
@@ -46,6 +48,7 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "Error at close pipefd[0] 2\n");
             if (close(pipefd[1]) == -1)
                 fprintf(stderr, "Error at close pipefd[1] 2\n");
+            waitpid(pid1, &status1, 0);
             return -1;
         }
         if (pid2 == 0) {
