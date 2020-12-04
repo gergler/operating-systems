@@ -23,7 +23,6 @@ int main(int argc, char *argv[]) {
             return -1;
         }
     }
-    printf("count of blank lines: %d\n", count);
     status = pclose(pipe);
     if (status == -1) {
         fprintf(stderr, "Error at pipe closing");
@@ -35,5 +34,6 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Child ended due to signal: %d\n", WTERMSIG(status));
         return -1;
     }
+    printf("count of blank lines: %d\n", count);
     return 0;
 }
