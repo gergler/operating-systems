@@ -20,9 +20,9 @@ int main() {
         exit(-1);
     }
     newtty = savetty;
-    newtty.c_lflag &= ~ICANON;/* выход из канонического режима */
-    newtty.c_lflag &= ~ECHO;  /* отключение эхо-сопровождения*/
-    newtty.c_cc[VMIN] = 1;    /* минимум 5 символов */
+    newtty.c_lflag &= ~ICANON;
+    newtty.c_lflag &= ~ECHO;  
+    newtty.c_cc[VMIN] = 1;   
     if (ioctl(STDIN_FILENO, TCSETAF, &newtty) == -1) {
         fprintf(stderr, "Can not switch the terminal to unprocessed mode\n");
         exit(-1);
