@@ -7,6 +7,9 @@
 
 #define MAX_DIR 256
 
+extern char **environ;
+
+
 void print_ulimit() {
     struct rlimit limit;
     if (getrlimit(RLIMIT_FSIZE, &limit) == 0) {
@@ -111,8 +114,8 @@ int main(int argc, char *argv[], char *envp[]) {
                 if (putenv(optarg) != 0)
                     fprintf(stderr, "putenv\n");
             case 'v':
-                for (; *envp; ++envp)
-                    printf("%s\n", *envp);
+                for (char **env = environ; *env; ++env)
+                    printf("%s\n", *env);
                 break;
             default:
                 printf("This command doesn't exist\n");
