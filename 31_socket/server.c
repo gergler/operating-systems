@@ -3,7 +3,7 @@
 #include <zconf.h>
 #include <ctype.h>
 
-#define SOCKETNAME  "socket_server"
+#define SOCKETNAME  "mysocket"
 
 int main() {
     int sock, msg_sock;
