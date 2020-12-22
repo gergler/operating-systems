@@ -12,7 +12,9 @@ int main() {
     int read_num;
     struct sockaddr_un server;
     char buf[MSGSIZE];
-
+    
+    unlink(NAME);
+    
     sock = socket(AF_UNIX, SOCK_STREAM, 0);
     if (sock < 0) {
         fprintf(stderr, "Error at opening stream socket\n");
