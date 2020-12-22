@@ -4,20 +4,20 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#define TEXT "Hello EVERYONE!!!\n"
+#define TEXT "Hello EVERYONE!!!"
 
 int main(int argc, char *argv[]) {
     int sock;
     struct sockaddr_un server;
 
     if (argc < 2) {
-        printf("usage:%s <pathname>", argv[0]);
+        printf("usage:%s <pathname>\n", argv[0]);
         exit(1);
     }
 
     sock = socket(AF_UNIX, SOCK_STREAM, 0);
     if (sock < 0) {
-        fprintf(stderr, "Error at opening stream socket");
+        fprintf(stderr, "Error at opening stream socket\n");
         return -1;
     }
 
@@ -25,19 +25,19 @@ int main(int argc, char *argv[]) {
     strcpy(server.sun_path, argv[1]);
 
     if (connect(sock, (struct sockaddr *) &server, sizeof(struct sockaddr_un)) < 0) {
-        fprintf(stderr, "Error at connecting stream socket");
+        fprintf(stderr, "Error at connecting stream socket\n");
         if (close(sock) == -1)
             fprintf(stderr, "Error at closing socket\n");
         return -1;
     }
 
     if (write(sock, TEXT, sizeof(TEXT)) != strlen(TEXT)) {
-        fprintf(stderr, "Error at writing TEXT");
+        fprintf(stderr, "Error at writing TEXT\n");
         if (close(sock) == -1)
             fprintf(stderr, "Error at closing socket\n");
         return -1;
     }
-    
+
     if (close(sock) == -1)
         fprintf(stderr, "Error at closing socket\n");
 }
