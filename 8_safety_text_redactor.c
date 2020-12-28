@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
     lock.l_len = 0;
     if (fcntl(fd, F_SETLK, &lock) == -1) {
         if ((errno == EACCES) || (errno == EAGAIN)) {
-            printf("Right now %s busy, try again later...\n", argv[1]);
+            printf("Right now %s is busy, try again later...\n", argv[1]);
             return -1;
         }
         fprintf(stderr, "Error at %s", argv[1]);
