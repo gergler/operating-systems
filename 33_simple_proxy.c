@@ -53,7 +53,7 @@ void handle(int client) {
     }
     sigemptyset(&mask);
     sigaddset(&mask, SIGCHLD);
-    if (sigprocmask(SIG_BLOCK, &mask, &old_mask) < 0) {
+    if (sigprocmask(SIG_BLOCK, &mask, &old_mask) == -1) {
         fprintf(stderr, "Error at sigprocmask()\n");
         exit(-1);
     }
